@@ -9,6 +9,7 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class UserMealsUtil {
     public static void main(String[] args) {
@@ -57,10 +58,12 @@ public class UserMealsUtil {
                                                              LocalTime startTime,
                                                              LocalTime endTime,
                                                              int caloriesPerDay) {
+        Map<LocalDate,Integer> calPerDateMap = meals.stream().collect(Collectors.groupingBy(meal->meal.getDateTime().toLocalDate(),
+                Collectors.summingInt(UserMeal::getCalories)));
+
         return meals.stream().filter(meal1->TimeUtil.isBetweenInclusive(meal1.getDateTime().toLocalTime(),startTime,endTime))
                 .map(meal->{
-                    boolean isExceeded = meals.stream().filter(m->m.getDateTime().toLocalDate()
-                        .equals(meal.getDateTime().toLocalDate())).mapToInt(UserMeal::getCalories).sum()>caloriesPerDay;
+                    boolean isExceeded = calPerDateMap.get(meal.getDateTime().toLocalDate())>caloriesPerDay;
 
              return new UserMealWithExcess(meal.getDateTime(),meal.getDescription(),meal.getCalories(),isExceeded);
          }).collect(Collectors.toList());
